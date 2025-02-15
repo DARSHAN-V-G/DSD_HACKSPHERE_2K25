@@ -1,76 +1,29 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import API from '../api/axios';
-import { toast } from 'react-toastify';
-import { useAuth } from '../context/AuthContext';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import API from "../api/axios";
+import { toast } from "react-toastify";
+import { useAuth } from "../context/AuthContext";
 
 const UploadRecord = () => {
+  const token = localStorage.getItem("token");
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    patientId: '',
-    title: '',
-    description: '',
-    recordType: '',
-    recordDate: ''
+    patientId: "",
+    title: "",
+    description: "",
+    recordType: "",
+    recordDate: "",
   });
+
   const navigate = useNavigate();
   const { user } = useAuth();
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!file) {
-      toast.error('Please select a file to upload');
-      return;
-    }
-
-    const data = new FormData();
-    data.append('file', file);
-    data.append('patientId', formData.patientId);
-    data.append('metadata', JSON.stringify({
-      title: formData.title,
-      description: formData.description,
-      recordType: formData.recordType,
-      recordDate: formData.recordDate
-    }));
-
-    setLoading(true);
-    try {
-      const response = await API.post('/records/upload', data, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      
-      toast.success('Record uploaded successfully!');
-      setFile(null);
-      setFormData({
-        patientId: '',
-        title: '',
-        description: '',
-        recordType: '',
-        recordDate: ''
-      });
-      
-      // Redirect based on user role
-      if (user.role === 'doctor') {
-        navigate('/doctor/records');
-      } else {
-        navigate('/patient/records');
-      }
-    } catch (error) {
-      const errorMessage = error.response?.data?.error || 'Upload failed';
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      if (selectedFile.size > 10 * 1024 * 1024) { // 10MB limit
-        toast.error('File size should not exceed 10MB');
+      if (selectedFile.size > 10 * 1024 * 1024) {
+        toast.error("File size should not exceed 10MB");
         e.target.value = null;
         return;
       }
@@ -78,10 +31,47 @@ const UploadRecord = () => {
     }
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!file) {
+      toast.error("Please select a file to upload");
+      return;
+    }
+  
+    const data = new FormData();
+    data.append("file", file);
+    data.append("patientId", formData.patientId);
+    data.append("title", formData.title);
+    data.append("description", formData.description);
+    data.append("recordType", formData.recordType);
+    data.append("recordDate", formData.recordDate);
+  
+    console.log("Uploading Data:", Object.fromEntries(data.entries())); // Debugging Step
+  
+    try {
+      const response = await API.post("/records/upload", data, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+  
+      toast.success("Record uploaded successfully!");
+    } catch (error) {
+      console.error("Upload Error:", error);
+      if (error.response) {
+        console.error("Server Response:", error.response.data);
+        toast.error(error.response.data.error || "Upload failed. Check form data.");
+      } else {
+        toast.error("An unknown error occurred.");
+      }
+    }
+  };
+  
+
   return (
     <form onSubmit={handleSubmit} className="max-w-md mx-auto mt-8 space-y-6">
       <h2 className="text-2xl font-bold mb-6">Upload Medical Record</h2>
-      
+
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700">Patient ID</label>
@@ -156,14 +146,8 @@ const UploadRecord = () => {
         </div>
       </div>
 
-      <button
-        type="submit"
-        disabled={loading}
-        className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${
-          loading ? 'opacity-50 cursor-not-allowed' : ''
-        }`}
-      >
-        {loading ? 'Uploading...' : 'Upload Record'}
+      <button type="submit" disabled={loading} className="w-full py-2 px-4 text-white bg-indigo-600 hover:bg-indigo-700">
+        {loading ? "Uploading..." : "Upload Record"}
       </button>
     </form>
   );

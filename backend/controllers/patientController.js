@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const Patient = require("../models/Patient");
+const bcrypt = require("bcrypt");
 require("dotenv").config();
 
 exports.registerPatient = async (req, res) => {
@@ -24,12 +25,12 @@ exports.loginPatient = async (req, res) => {
     const { email, password } = req.body;
     const patient = await Patient.findOne({ email });
 
-    if (!patient || !(await patient.comparePassword(password))) {
+    if (!patient || !(await bcrypt.compare(password, patient.password))) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
     const token = jwt.sign({ id: patient._id, role: "patient" }, process.env.JWT_SECRET, { expiresIn: "1d" });
-    res.json({ token, patientId: patient._id });
+    res.json({ token, patientId: patient });
   } catch (error) {
     console.error("Login Error:", error);
     res.status(500).json({ error: "Server error" });

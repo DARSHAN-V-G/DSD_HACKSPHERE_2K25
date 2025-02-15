@@ -23,20 +23,14 @@ function App() {
             <Route path="/patient/register" element={<PatientRegister />} />
             <Route path="/patient/login" element={<PatientLogin />} />
             <Route path="/doctor/login" element={<DoctorLogin />} />
-            <Route path="/patient/records" element={
-              <PrivateRoute role="patient">
-                <PatientRecords />
-              </PrivateRoute>
-            } />
+            <Route path="/patient/records" element={<PatientRecords />} />
             <Route path="/doctor/records" element={
               <PrivateRoute role="doctor">
                 <DoctorViewRecords />
               </PrivateRoute>
             } />
             <Route path="/upload" element={
-              <PrivateRoute>
                 <UploadRecord />
-              </PrivateRoute>
             } />
           </Routes>
         </div>

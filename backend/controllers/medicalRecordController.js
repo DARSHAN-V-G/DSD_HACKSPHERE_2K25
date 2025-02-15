@@ -13,6 +13,14 @@ exports.uploadMedicalRecord = async (req, res) => {
     const doctorId = req.user.id; // Get from auth middleware
     const fileBuffer = req.file.buffer;
 
+    // Ensure metadata is correctly parsed
+    let parsedMetadata;
+    try {
+      parsedMetadata = JSON.parse(metadata);
+    } catch (error) {
+      return res.status(400).json({ error: "Invalid metadata format" });
+    }
+
     // Upload file to IPFS
     const ipfsCID = await uploadToIPFS(fileBuffer);
     if (!ipfsCID) {
@@ -25,7 +33,7 @@ exports.uploadMedicalRecord = async (req, res) => {
       doctorId,
       ipfsCID,
       metadata: {
-        ...metadata,
+        ...parsedMetadata,
         fileName: req.file.originalname,
         fileType: req.file.mimetype,
         fileSize: req.file.size,

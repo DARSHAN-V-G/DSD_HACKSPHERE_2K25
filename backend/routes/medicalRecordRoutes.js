@@ -28,7 +28,7 @@ const upload = multer({
   }
 });
 
-router.post("/upload", authMiddleware, upload.single("file"), uploadMedicalRecord);
+router.post("/upload", upload.single("file"), uploadMedicalRecord);
 router.get("/:id", authMiddleware, getRecord);
 
 module.exports = router;
