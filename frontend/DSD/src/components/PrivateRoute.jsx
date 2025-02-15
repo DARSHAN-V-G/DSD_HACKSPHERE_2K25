@@ -1,15 +1,18 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const PrivateRoute = ({ children, role }) => {
   const { user } = useAuth();
+  const location = useLocation();
 
   if (!user) {
-    return <Navigate to="/patient/login" />;
+    // Redirect to login while saving the attempted URL
+    return <Navigate to="/patient/login" state={{ from: location }} replace />;
   }
 
   if (role && user.role !== role) {
-    return <Navigate to="/" />;
+    // If a specific role is required and user doesn't have it, redirect to home
+    return <Navigate to="/" replace />;
   }
 
   return children;
